@@ -9,7 +9,7 @@ const PRESETS: Record<string, { width: number; height: number } | null> = {
 }
 
 const TARGET_BYTES   = 100 * 1024       // 100 KB
-const MAX_INPUT_BYTES = 20 * 1024 * 1024 // 20 MB
+const MAX_INPUT_BYTES = 4 * 1024 * 1024 // 4 MB (Vercel serverless limit)
 
 export async function POST(req: NextRequest) {
   try {

@@ -100,8 +100,8 @@ export default function Home() {
       setError('El archivo debe ser una imagen (JPG, PNG, WEBP, etc.)')
       return
     }
-    if (f.size > 20 * 1024 * 1024) {
-      setError('La imagen no puede superar 20 MB')
+    if (f.size > 4 * 1024 * 1024) {
+      setError('La imagen no puede superar 4 MB. Si es más grande, redúcela primero con una herramienta como squoosh.app.')
       return
     }
     setFile(f)
@@ -141,8 +141,19 @@ export default function Home() {
     try {
       const res = await fetch('/api/process', { method: 'POST', body: fd })
       if (!res.ok) {
-        const { error: msg } = await res.json()
-        throw new Error(msg ?? 'Error desconocido')
+        let msg = 'Error al procesar la imagen'
+        try {
+          const data = await res.json()
+          msg = data.error ?? msg
+        } catch {
+          const text = await res.text().catch(() => '')
+          if (res.status === 413 || text.toLowerCase().includes('entity too large')) {
+            msg = 'La imagen es demasiado grande para el servidor. Usa una imagen de menos de 4 MB.'
+          } else if (text) {
+            msg = text
+          }
+        }
+        throw new Error(msg)
       }
       const blob     = await res.blob()
       const url      = URL.createObjectURL(blob)
@@ -224,7 +235,7 @@ export default function Home() {
                   {dragging ? 'Suelta la imagen aquí' : 'Arrastra tu imagen aquí'}
                 </p>
                 <p className="text-sm text-gray-400 mt-1">
-                  o haz clic para seleccionar · JPG, PNG, WEBP · máx.&nbsp;20&nbsp;MB
+                  o haz clic para seleccionar · JPG, PNG, WEBP · máx.&nbsp;4&nbsp;MB
                 </p>
               </>
             )}
